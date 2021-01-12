@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: ./app/lib/autobanh.jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/lib/autobanh.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

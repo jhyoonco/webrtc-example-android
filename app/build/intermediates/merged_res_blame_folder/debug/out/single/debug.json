@@ -1,0 +1,106 @@
+[
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi_ic_action_full_screen.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-mdpi\\ic_action_full_screen.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\menu_connect_menu.xml.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\menu\\connect_menu.xml"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-xhdpi_ic_launcher.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-xhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\layout_activity_call.xml.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\layout\\activity_call.xml"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\layout_activity_connect.xml.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\layout\\activity_connect.xml"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi_ic_action_return_from_full_screen.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-hdpi\\ic_action_return_from_full_screen.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-xhdpi_disconnect.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-xhdpi\\disconnect.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi_ic_launcher.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-hdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-xhdpi_ic_loopback_call.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-xhdpi\\ic_loopback_call.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi_disconnect.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-hdpi\\disconnect.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-xhdpi_ic_action_full_screen.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-xhdpi\\ic_action_full_screen.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi_ic_action_return_from_full_screen.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-mdpi\\ic_action_return_from_full_screen.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\xml_preferences.xml.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\xml\\preferences.xml"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-ldpi_disconnect.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-ldpi\\disconnect.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi_ic_loopback_call.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-hdpi\\ic_loopback_call.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-hdpi_ic_action_full_screen.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-hdpi\\ic_action_full_screen.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-ldpi_ic_action_full_screen.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-ldpi\\ic_action_full_screen.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-xhdpi_ic_action_return_from_full_screen.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-xhdpi\\ic_action_return_from_full_screen.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi_disconnect.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-mdpi\\disconnect.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi_ic_loopback_call.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-mdpi\\ic_loopback_call.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-ldpi_ic_action_return_from_full_screen.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-ldpi\\ic_action_return_from_full_screen.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-ldpi_ic_launcher.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-ldpi\\ic_launcher.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\layout_fragment_hud.xml.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\layout\\fragment_hud.xml"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-ldpi_ic_loopback_call.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-ldpi\\ic_loopback_call.png"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\layout_fragment_call.xml.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\layout\\fragment_call.xml"
+    },
+    {
+        "merged": "E:\\dev-app\\src-master-examples-androidapp\\app\\build\\intermediates\\res\\merged\\debug\\drawable-mdpi_ic_launcher.png.flat",
+        "source": "E:\\dev-app\\src-master-examples-androidapp\\app\\src\\main\\res\\drawable-mdpi\\ic_launcher.png"
+    }
+]
