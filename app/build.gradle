@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
 }
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 29
@@ -19,6 +20,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -31,5 +36,7 @@ dependencies {
     implementation files('lib/autobanh.jar')
 
     implementation 'com.android.support:support-annotations:28.0.0'
+    implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'org.webrtc:google-webrtc:1.0.+'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
