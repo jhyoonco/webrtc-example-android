@@ -233,8 +233,7 @@ class WebSocketChannelClient(private val handler: Handler, private val events: W
         }
 
         override fun onClose(code: WebSocketCloseNotification, reason: String) {
-            Log.d(TAG, "WebSocket connection closed. Code: " + code + ". Reason: " + reason + ". State: "
-                    + state)
+            Log.d(TAG, "WebSocket connection closed. Code: " + code + ". Reason: " + reason + ". State: " + state)
             synchronized(closeEventLock) {
                 closeEvent = true
 //                closeEventLock.notify()
@@ -251,8 +250,7 @@ class WebSocketChannelClient(private val handler: Handler, private val events: W
         override fun onTextMessage(payload: String) {
             Log.d(TAG, "WSS->C: $payload")
             handler.post {
-                if (state == WebSocketConnectionState.CONNECTED
-                        || state == WebSocketConnectionState.REGISTERED) {
+                if (state == WebSocketConnectionState.CONNECTED || state == WebSocketConnectionState.REGISTERED) {
                     events.onWebSocketMessage(payload)
                 }
             }

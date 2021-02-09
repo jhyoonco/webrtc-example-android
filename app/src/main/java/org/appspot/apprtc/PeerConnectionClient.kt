@@ -40,7 +40,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
     private val pcObserver = PCObserver()
     private val sdpObserver = SDPObserver()
     private val statsTimer = Timer()
-    private val peerConnectionParameters: PeerConnectionParameters?
+    private val peerConnectionParameters: PeerConnectionParameters
     private var factory: PeerConnectionFactory? = null
     private var peerConnection: PeerConnection? = null
     private var audioSource: AudioSource? = null
@@ -172,7 +172,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
 
     fun createPeerConnection(localRender: VideoSink?, remoteSink: VideoSink,
                              videoCapturer: VideoCapturer?, signalingParameters: SignalingParameters?) {
-        if (peerConnectionParameters!!.videoCallEnabled && videoCapturer == null) {
+        if (peerConnectionParameters.videoCallEnabled && videoCapturer == null) {
             Log.w(TAG, "Video call enabled but no video capturer provided.")
         }
         createPeerConnection(
@@ -181,10 +181,10 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
 
     fun createPeerConnection(localRender: VideoSink?, remoteSinks: List<VideoSink>?,
                              videoCapturer: VideoCapturer?, signalingParameters: SignalingParameters?) {
-        if (peerConnectionParameters == null) {
-            Log.e(TAG, "Creating peer connection without initializing factory.")
-            return
-        }
+//        if (peerConnectionParameters == null) {
+//            Log.e(TAG, "Creating peer connection without initializing factory.")
+//            return
+//        }
         this.localRender = localRender
         this.remoteSinks = remoteSinks
         this.videoCapturer = videoCapturer
@@ -206,19 +206,18 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
     }
 
     private val isVideoCallEnabled: Boolean
-        private get() = peerConnectionParameters!!.videoCallEnabled && videoCapturer != null
+        private get() = peerConnectionParameters.videoCallEnabled && videoCapturer != null
 
     private fun createPeerConnectionFactoryInternal(options: PeerConnectionFactory.Options?) {
         isError = false
-        if (peerConnectionParameters!!.tracing) {
+        if (peerConnectionParameters.tracing) {
             PeerConnectionFactory.startInternalTracingCapture(
                     Environment.getExternalStorageDirectory().absolutePath + File.separator
                             + "webrtc-trace.txt")
         }
 
         // Check if ISAC is used by default.
-        preferIsac = (peerConnectionParameters.audioCodec != null
-                && peerConnectionParameters.audioCodec == AUDIO_CODEC_ISAC)
+        preferIsac = (peerConnectionParameters.audioCodec == AUDIO_CODEC_ISAC)
 
         // It is possible to save a copy in raw PCM format on a file by checking
         // the "Save input audio to file" checkbox in the Settings UI. A callback
@@ -264,7 +263,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
 
     fun createJavaAudioDevice(): AudioDeviceModule {
         // Enable/disable OpenSL ES playback.
-        if (!peerConnectionParameters!!.useOpenSLES) {
+        if (!peerConnectionParameters.useOpenSLES) {
             Log.w(TAG, "External OpenSLES ADM not implemented yet.")
             // TODO(magjed): Add support for external OpenSLES ADM.
         }
@@ -340,7 +339,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
     private fun createMediaConstraintsInternal() {
         // Create video constraints if video call is enabled.
         if (isVideoCallEnabled) {
-            videoWidth = peerConnectionParameters!!.videoWidth
+            videoWidth = peerConnectionParameters.videoWidth
             videoHeight = peerConnectionParameters.videoHeight
             videoFps = peerConnectionParameters.videoFps
 
@@ -360,22 +359,22 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
         // Create audio constraints.
         audioConstraints = MediaConstraints()
         // added for audio performance measurements
-        if (peerConnectionParameters!!.noAudioProcessing) {
+        if (peerConnectionParameters.noAudioProcessing) {
             Log.d(TAG, "Disabling audio processing")
-            audioConstraints!!.mandatory.add(
+            audioConstraints?.mandatory?.add(
                     MediaConstraints.KeyValuePair(AUDIO_ECHO_CANCELLATION_CONSTRAINT, "false"))
-            audioConstraints!!.mandatory.add(
+            audioConstraints?.mandatory?.add(
                     MediaConstraints.KeyValuePair(AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT, "false"))
-            audioConstraints!!.mandatory.add(
+            audioConstraints?.mandatory?.add(
                     MediaConstraints.KeyValuePair(AUDIO_HIGH_PASS_FILTER_CONSTRAINT, "false"))
-            audioConstraints!!.mandatory.add(
+            audioConstraints?.mandatory?.add(
                     MediaConstraints.KeyValuePair(AUDIO_NOISE_SUPPRESSION_CONSTRAINT, "false"))
         }
         // Create SDP constraints.
         sdpMediaConstraints = MediaConstraints()
-        sdpMediaConstraints!!.mandatory.add(
+        sdpMediaConstraints?.mandatory?.add(
                 MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"))
-        sdpMediaConstraints!!.mandatory.add(MediaConstraints.KeyValuePair(
+        sdpMediaConstraints?.mandatory?.add(MediaConstraints.KeyValuePair(
                 "OfferToReceiveVideo", java.lang.Boolean.toString(isVideoCallEnabled)))
     }
 
@@ -396,7 +395,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
         // Use ECDSA encryption.
         rtcConfig.keyType = PeerConnection.KeyType.ECDSA
         // Enable DTLS for normal calls and disable for loopback calls.
-        rtcConfig.enableDtlsSrtp = !peerConnectionParameters!!.loopback
+        rtcConfig.enableDtlsSrtp = !peerConnectionParameters.loopback
         rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
         peerConnection = factory!!.createPeerConnection(rtcConfig, pcObserver)
         if (dataChannelEnabled) {
@@ -407,7 +406,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
             init.maxRetransmitTimeMs = peerConnectionParameters.dataChannelParameters!!.maxRetransmitTimeMs
             init.id = peerConnectionParameters.dataChannelParameters!!.id
             init.protocol = peerConnectionParameters.dataChannelParameters!!.protocol
-            dataChannel = peerConnection!!.createDataChannel("ApprtcDemo data", init)
+            dataChannel = peerConnection?.createDataChannel("ApprtcDemo data", init)
         }
         isInitiator = false
 
@@ -416,16 +415,16 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
         Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO)
         val mediaStreamLabels = listOf("ARDAMS")
         if (isVideoCallEnabled) {
-            peerConnection!!.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels)
+            peerConnection?.addTrack(createVideoTrack(videoCapturer), mediaStreamLabels)
             // We can add the renderers right away because we don't need to wait for an
             // answer to get the remote track.
             remoteVideoTrack = getRemoteVideoTrack()
-            remoteVideoTrack!!.setEnabled(renderVideo)
+            remoteVideoTrack?.setEnabled(renderVideo)
             for (remoteSink in remoteSinks!!) {
-                remoteVideoTrack!!.addSink(remoteSink)
+                remoteVideoTrack?.addSink(remoteSink)
             }
         }
-        peerConnection!!.addTrack(createAudioTrack(), mediaStreamLabels)
+        peerConnection?.addTrack(createAudioTrack(), mediaStreamLabels)
         if (isVideoCallEnabled) {
             findVideoSender()
         }
@@ -452,78 +451,74 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
         val dateFormat: DateFormat = SimpleDateFormat("yyyyMMdd_hhmm_ss", Locale.getDefault())
         val date = Date()
         val outputFileName = "event_log_" + dateFormat.format(date) + ".log"
-        return File(
-                appContext!!.getDir(RTCEVENTLOG_OUTPUT_DIR_NAME, Context.MODE_PRIVATE), outputFileName)
+        return File(appContext?.getDir(RTCEVENTLOG_OUTPUT_DIR_NAME, Context.MODE_PRIVATE), outputFileName)
     }
 
     private fun maybeCreateAndStartRtcEventLog() {
         if (appContext == null || peerConnection == null) {
             return
         }
-        if (!peerConnectionParameters!!.enableRtcEventLog) {
+        if (!peerConnectionParameters.enableRtcEventLog) {
             Log.d(TAG, "RtcEventLog is disabled.")
             return
         }
         rtcEventLog = RtcEventLog(peerConnection)
-        rtcEventLog!!.start(createRtcEventLogOutputFile())
+        rtcEventLog?.start(createRtcEventLogOutputFile())
     }
 
     private fun closeInternal() {
-        if (factory != null && peerConnectionParameters!!.aecDump) {
+        if (factory != null && peerConnectionParameters.aecDump) {
             factory!!.stopAecDump()
         }
         Log.d(TAG, "Closing peer connection.")
         statsTimer.cancel()
-        if (dataChannel != null) {
-            dataChannel!!.dispose()
-            dataChannel = null
-        }
-        if (rtcEventLog != null) {
-            // RtcEventLog should stop before the peer connection is disposed.
-            rtcEventLog!!.stop()
-            rtcEventLog = null
-        }
-        if (peerConnection != null) {
-            peerConnection!!.dispose()
-            peerConnection = null
-        }
+
+        dataChannel?.dispose()
+        dataChannel = null
+
+        // RtcEventLog should stop before the peer connection is disposed.
+        rtcEventLog?.stop()
+        rtcEventLog = null
+
+        peerConnection?.dispose()
+        peerConnection = null
+
         Log.d(TAG, "Closing audio source.")
-        if (audioSource != null) {
-            audioSource!!.dispose()
-            audioSource = null
-        }
+        audioSource?.dispose()
+        audioSource = null
+
         Log.d(TAG, "Stopping capture.")
-        if (videoCapturer != null) {
+        videoCapturer?.let {
             try {
-                videoCapturer!!.stopCapture()
+                it.stopCapture()
             } catch (e: InterruptedException) {
                 throw RuntimeException(e)
             }
             videoCapturerStopped = true
-            videoCapturer!!.dispose()
-            videoCapturer = null
+            it.dispose()
         }
+        videoCapturer = null
+
         Log.d(TAG, "Closing video source.")
-        if (videoSource != null) {
-            videoSource!!.dispose()
-            videoSource = null
-        }
-        if (surfaceTextureHelper != null) {
-            surfaceTextureHelper!!.dispose()
-            surfaceTextureHelper = null
-        }
-        if (saveRecordedAudioToFile != null) {
+        videoSource?.dispose()
+        videoSource = null
+
+        surfaceTextureHelper?.dispose()
+        surfaceTextureHelper = null
+
+        saveRecordedAudioToFile?.let {
             Log.d(TAG, "Closing audio file for recorded input audio.")
             saveRecordedAudioToFile!!.stop()
-            saveRecordedAudioToFile = null
         }
+        saveRecordedAudioToFile = null
+
         localRender = null
         remoteSinks = null
+
         Log.d(TAG, "Closing peer connection factory.")
-        if (factory != null) {
-            factory!!.dispose()
-            factory = null
-        }
+        factory?.dispose()
+        factory = null
+
         rootEglBase.release()
         Log.d(TAG, "Closing peer connection done.")
         events.onPeerConnectionClosed()
@@ -536,7 +531,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
 
     // TODO(sakal): getStats is deprecated.
     private val stats: Unit
-        private get() {
+        get() {
             if (peerConnection == null || isError) {
                 return
             }
@@ -565,21 +560,15 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
     fun setAudioEnabled(enable: Boolean) {
         executor.execute {
             enableAudio = enable
-            if (localAudioTrack != null) {
-                localAudioTrack!!.setEnabled(enableAudio)
-            }
+            localAudioTrack?.setEnabled(enableAudio)
         }
     }
 
     fun setVideoEnabled(enable: Boolean) {
         executor.execute {
             renderVideo = enable
-            if (localVideoTrack != null) {
-                localVideoTrack!!.setEnabled(renderVideo)
-            }
-            if (remoteVideoTrack != null) {
-                remoteVideoTrack!!.setEnabled(renderVideo)
-            }
+            localVideoTrack?.setEnabled(renderVideo)
+            remoteVideoTrack?.setEnabled(renderVideo)
         }
     }
 
@@ -639,9 +628,8 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
             if (isVideoCallEnabled) {
                 sdp = preferCodec(sdp, getSdpVideoCodecName(peerConnectionParameters), false)
             }
-            if (peerConnectionParameters!!.audioStartBitrate > 0) {
-                sdp = setStartBitrate(
-                        AUDIO_CODEC_OPUS, false, sdp, peerConnectionParameters.audioStartBitrate)
+            if (peerConnectionParameters.audioStartBitrate > 0) {
+                sdp = setStartBitrate(AUDIO_CODEC_OPUS, false, sdp, peerConnectionParameters.audioStartBitrate)
             }
             Log.d(TAG, "Set remote SDP.")
             val sdpRemote = SessionDescription(desc.type, sdp)
@@ -728,8 +716,8 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
 
     private fun findVideoSender() {
         for (sender in peerConnection!!.senders) {
-            if (sender.track() != null) {
-                val trackType = sender.track()!!.kind()
+            sender.track()?.let {
+                val trackType = it.kind()
                 if (trackType == VIDEO_TRACK_TYPE) {
                     Log.d(TAG, "Found video sender.")
                     localVideoSender = sender
@@ -762,8 +750,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
     private fun switchCameraInternal() {
         if (videoCapturer is CameraVideoCapturer) {
             if (!isVideoCallEnabled || isError) {
-                Log.e(TAG,
-                        "Failed to switch camera. Video: $isVideoCallEnabled. Error : $isError")
+                Log.e(TAG, "Failed to switch camera. Video: $isVideoCallEnabled. Error : $isError")
                 return  // No video is sent or only one camera is available or error happened.
             }
             Log.d(TAG, "Switch camera")
@@ -784,13 +771,11 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
 
     private fun changeCaptureFormatInternal(width: Int, height: Int, framerate: Int) {
         if (!isVideoCallEnabled || isError || videoCapturer == null) {
-            Log.e(TAG,
-                    "Failed to change capture format. Video: " + isVideoCallEnabled
-                            + ". Error : " + isError)
+            Log.e(TAG, "Failed to change capture format. Video: " + isVideoCallEnabled  + ". Error : " + isError)
             return
         }
         Log.d(TAG, "changeCaptureFormat: " + width + "x" + height + "@" + framerate)
-        videoSource!!.adaptOutputFormat(width, height, framerate)
+        videoSource?.adaptOutputFormat(width, height, framerate)
     }
 
     // Implementation detail: observe ICE & stream changes and react accordingly.
@@ -810,12 +795,10 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
         override fun onIceConnectionChange(newState: IceConnectionState) {
             executor.execute {
                 Log.d(TAG, "IceConnectionState: $newState")
-                if (newState == IceConnectionState.CONNECTED) {
-                    events.onIceConnected()
-                } else if (newState == IceConnectionState.DISCONNECTED) {
-                    events.onIceDisconnected()
-                } else if (newState == IceConnectionState.FAILED) {
-                    reportError("ICE connection failed.")
+                when (newState) {
+                    IceConnectionState.CONNECTED -> events.onIceConnected()
+                    IceConnectionState.DISCONNECTED -> events.onIceDisconnected()
+                    IceConnectionState.FAILED -> reportError("ICE connection failed.")
                 }
             }
         }
@@ -823,12 +806,10 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
         override fun onConnectionChange(newState: PeerConnectionState) {
             executor.execute {
                 Log.d(TAG, "PeerConnectionState: $newState")
-                if (newState == PeerConnectionState.CONNECTED) {
-                    events.onConnected()
-                } else if (newState == PeerConnectionState.DISCONNECTED) {
-                    events.onDisconnected()
-                } else if (newState == PeerConnectionState.FAILED) {
-                    reportError("DTLS connection failed.")
+                when (newState) {
+                    PeerConnectionState.CONNECTED -> events.onConnected()
+                    PeerConnectionState.DISCONNECTED -> events.onDisconnected()
+                    PeerConnectionState.FAILED -> reportError("DTLS connection failed.")
                 }
             }
         }
@@ -866,7 +847,8 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
                     }
                     val data = buffer.data
                     val bytes = ByteArray(data.capacity())
-                    data[bytes]
+                    data.get(bytes)
+//                    data[bytes]
                     val strData = String(bytes, Charset.forName("UTF-8"))
                     Log.d(TAG, "Got msg: $strData over $dc")
                 }
@@ -1005,8 +987,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
             return fieldTrials
         }
 
-        private fun setStartBitrate(
-                codec: String, isVideoCodec: Boolean, sdp: String, bitrateKbps: Int): String {
+        private fun setStartBitrate(codec: String, isVideoCodec: Boolean, sdp: String, bitrateKbps: Int): String {
             val lines = sdp.split("\r\n".toRegex()).toTypedArray()
             var rtpmapLineIndex = -1
             var sdpFormatUpdated = false
@@ -1038,9 +1019,9 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
                 if (codecMatcher.matches()) {
                     Log.d(TAG, "Found " + codec + " " + lines[i])
                     if (isVideoCodec) {
-                        lines[i] += "; " + VIDEO_CODEC_PARAM_START_BITRATE + "=" + bitrateKbps
+                        lines[i] += "; $VIDEO_CODEC_PARAM_START_BITRATE=$bitrateKbps"
                     } else {
-                        lines[i] += "; " + AUDIO_CODEC_PARAM_BITRATE + "=" + bitrateKbps * 1000
+                        lines[i] += "; $AUDIO_CODEC_PARAM_BITRATE=${bitrateKbps * 1000}"
                     }
                     Log.d(TAG, "Update remote SDP line: " + lines[i])
                     sdpFormatUpdated = true
@@ -1052,12 +1033,10 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
                 newSdpDescription.append(lines[i]).append("\r\n")
                 // Append new a=fmtp line if no such line exist for a codec.
                 if (!sdpFormatUpdated && i == rtpmapLineIndex) {
-                    var bitrateSet: String
-                    bitrateSet = if (isVideoCodec) {
-                        "a=fmtp:" + codecRtpMap + " " + VIDEO_CODEC_PARAM_START_BITRATE + "=" + bitrateKbps
+                    val bitrateSet: String = if (isVideoCodec) {
+                        "a=fmtp:$codecRtpMap $VIDEO_CODEC_PARAM_START_BITRATE=$bitrateKbps"
                     } else {
-                        ("a=fmtp:" + codecRtpMap + " " + AUDIO_CODEC_PARAM_BITRATE + "="
-                                + bitrateKbps * 1000)
+                        "a=fmtp:$codecRtpMap $AUDIO_CODEC_PARAM_BITRATE=${bitrateKbps * 1000}"
                     }
                     Log.d(TAG, "Add remote SDP line: $bitrateSet")
                     newSdpDescription.append(bitrateSet).append("\r\n")
@@ -1077,8 +1056,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
             return -1
         }
 
-        private fun joinString(
-                s: Iterable<CharSequence?>, delimiter: String, delimiterAtEnd: Boolean): String {
+        private fun joinString(s: Iterable<CharSequence?>, delimiter: String, delimiterAtEnd: Boolean): String {
             val iter = s.iterator()
             if (!iter.hasNext()) {
                 return ""
@@ -1093,8 +1071,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
             return buffer.toString()
         }
 
-        private fun movePayloadTypesToFront(
-                preferredPayloadTypes: List<String?>, mLine: String): String? {
+        private fun movePayloadTypesToFront(preferredPayloadTypes: List<String?>, mLine: String): String? {
             // The format of the media description line should be: m=<media> <port> <proto> <fmt> ...
             val origLineParts = Arrays.asList(*mLine.split(" ".toRegex()).toTypedArray())
             if (origLineParts.size <= 3) {
@@ -1106,7 +1083,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
             unpreferredPayloadTypes.removeAll(preferredPayloadTypes)
             // Reconstruct the line with |preferredPayloadTypes| moved to the beginning of the payload
             // types.
-            val newLineParts: MutableList<String?> = ArrayList()
+            val newLineParts = mutableListOf<String?>()
             newLineParts.addAll(header)
             newLineParts.addAll(preferredPayloadTypes)
             newLineParts.addAll(unpreferredPayloadTypes)
@@ -1122,7 +1099,7 @@ class PeerConnectionClient(private val appContext: Context?, private val rootEgl
             }
             // A list with all the payload types with name |codec|. The payload types are integers in the
             // range 96-127, but they are stored as strings here.
-            val codecPayloadTypes: MutableList<String?> = ArrayList()
+            val codecPayloadTypes = mutableListOf<String?>()
             // a=rtpmap:<payload type> <encoding name>/<clock rate> [/<encoding parameters>]
             val codecPattern = Pattern.compile("^a=rtpmap:(\\d+) $codec(/\\d+)+[\r]?$")
             for (line in lines) {

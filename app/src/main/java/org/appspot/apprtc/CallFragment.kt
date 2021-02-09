@@ -93,8 +93,7 @@ class CallFragment : Fragment() {
             cameraSwitchButton!!.visibility = View.INVISIBLE
         }
         if (captureSliderEnabled) {
-            captureFormatSlider!!.setOnSeekBarChangeListener(
-                    CaptureQualityController(captureFormatText, callEvents))
+            captureFormatSlider!!.setOnSeekBarChangeListener(CaptureQualityController(captureFormatText, callEvents))
         } else {
             captureFormatText!!.visibility = View.GONE
             captureFormatSlider!!.visibility = View.GONE

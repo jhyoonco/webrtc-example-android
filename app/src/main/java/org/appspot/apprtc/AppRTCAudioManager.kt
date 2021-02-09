@@ -43,12 +43,11 @@ class AppRTCAudioManager private constructor(context: Context) {
     /** Selected audio device change event.  */
     interface AudioManagerEvents {
         // Callback fired once audio device is changed or list of available audio devices changed.
-        fun onAudioDeviceChanged(
-                selectedAudioDevice: AudioDevice?, availableAudioDevices: Set<AudioDevice?>)
+        fun onAudioDeviceChanged(selectedAudioDevice: AudioDevice?, availableAudioDevices: Set<AudioDevice?>)
     }
 
     private val apprtcContext: Context
-    private val audioManager: AudioManager?
+    private var audioManager: AudioManager
     private var audioManagerEvents: AudioManagerEvents? = null
     private var amState: AudioManagerState
     private var savedAudioMode = AudioManager.MODE_INVALID
@@ -157,7 +156,7 @@ class AppRTCAudioManager private constructor(context: Context) {
         amState = AudioManagerState.RUNNING
 
         // Store current audio state so we can restore it when stop() is called.
-        savedAudioMode = audioManager!!.mode
+        savedAudioMode = audioManager.mode
         savedIsSpeakerPhoneOn = audioManager.isSpeakerphoneOn
         savedIsMicrophoneMute = audioManager.isMicrophoneMute
         hasWiredHeadset = hasWiredHeadset()
@@ -171,8 +170,7 @@ class AppRTCAudioManager private constructor(context: Context) {
             // unknown amount of time.
             // TODO(henrika): possibly extend support of handling audio-focus changes. Only contains
             // logging for now.
-            val typeOfChange: String
-            typeOfChange = when (focusChange) {
+            val typeOfChange: String = when (focusChange) {
                 AudioManager.AUDIOFOCUS_GAIN -> "AUDIOFOCUS_GAIN"
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT -> "AUDIOFOCUS_GAIN_TRANSIENT"
                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE -> "AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE"
@@ -237,7 +235,7 @@ class AppRTCAudioManager private constructor(context: Context) {
         // Restore previously stored audio states.
         setSpeakerphoneOn(savedIsSpeakerPhoneOn)
         setMicrophoneMute(savedIsMicrophoneMute)
-        audioManager!!.mode = savedAudioMode
+        audioManager.mode = savedAudioMode
 
         // Abandon audio focus. Gives the previous focus owner, if any, focus.
         audioManager.abandonAudioFocus(audioFocusChangeListener)
@@ -318,7 +316,7 @@ class AppRTCAudioManager private constructor(context: Context) {
 
     /** Sets the speaker phone mode.  */
     private fun setSpeakerphoneOn(on: Boolean) {
-        val wasOn = audioManager!!.isSpeakerphoneOn
+        val wasOn = audioManager.isSpeakerphoneOn
         if (wasOn == on) {
             return
         }
@@ -327,7 +325,7 @@ class AppRTCAudioManager private constructor(context: Context) {
 
     /** Sets the microphone mute state.  */
     private fun setMicrophoneMute(on: Boolean) {
-        val wasMuted = audioManager!!.isMicrophoneMute
+        val wasMuted = audioManager.isMicrophoneMute
         if (wasMuted == on) {
             return
         }
@@ -349,9 +347,9 @@ class AppRTCAudioManager private constructor(context: Context) {
     @Deprecated("")
     private fun hasWiredHeadset(): Boolean {
         return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            audioManager!!.isWiredHeadsetOn
+            audioManager.isWiredHeadsetOn
         } else {
-            val devices = audioManager!!.getDevices(AudioManager.GET_DEVICES_ALL)
+            val devices = audioManager.getDevices(AudioManager.GET_DEVICES_ALL)
             for (device in devices) {
                 val type = device.type
                 if (type == AudioDeviceInfo.TYPE_WIRED_HEADSET) {
@@ -457,8 +455,7 @@ class AppRTCAudioManager private constructor(context: Context) {
         }
 
         // Update selected audio device.
-        val newAudioDevice: AudioDevice?
-        newAudioDevice = if (bluetoothManager.state == AppRTCBluetoothManager.State.SCO_CONNECTED) {
+        val newAudioDevice: AudioDevice? = if (bluetoothManager.state == AppRTCBluetoothManager.State.SCO_CONNECTED) {
             // If a Bluetooth is connected, then it should be used as output audio
             // device. Note that it is not sufficient that a headset is available;
             // an active SCO channel must also be up and running.
@@ -481,10 +478,8 @@ class AppRTCAudioManager private constructor(context: Context) {
             Log.d(TAG, "New device status: "
                     + "available=" + audioDevices + ", "
                     + "selected=" + newAudioDevice)
-            if (audioManagerEvents != null) {
-                // Notify a listening client that audio device has been changed.
-                audioManagerEvents!!.onAudioDeviceChanged(selectedAudioDevice, audioDevices)
-            }
+            // Notify a listening client that audio device has been changed.
+            audioManagerEvents?.onAudioDeviceChanged(selectedAudioDevice, audioDevices)
         }
         Log.d(TAG, "--- updateAudioDeviceState done")
     }
@@ -506,12 +501,11 @@ class AppRTCAudioManager private constructor(context: Context) {
         ThreadUtils.checkIsOnMainThread()
         apprtcContext = context
         audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        bluetoothManager = AppRTCBluetoothManager.Companion.create(context, this)
+        bluetoothManager = AppRTCBluetoothManager.create(context, this)
         wiredHeadsetReceiver = WiredHeadsetReceiver()
         amState = AudioManagerState.UNINITIALIZED
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        useSpeakerphone = sharedPreferences.getString(context.getString(R.string.pref_speakerphone_key),
-                context.getString(R.string.pref_speakerphone_default))
+        useSpeakerphone = sharedPreferences.getString(context.getString(R.string.pref_speakerphone_key), context.getString(R.string.pref_speakerphone_default))
         Log.d(TAG, "useSpeakerphone: $useSpeakerphone")
         defaultAudioDevice = if (useSpeakerphone == SPEAKERPHONE_FALSE) {
             AudioDevice.EARPIECE
@@ -522,7 +516,7 @@ class AppRTCAudioManager private constructor(context: Context) {
         // Create and initialize the proximity sensor.
         // Tablet devices (e.g. Nexus 7) does not support proximity sensors.
         // Note that, the sensor will not be active until start() has been called.
-        proximitySensor = AppRTCProximitySensor.Companion.create(context, Runnable { onProximitySensorChangedState() })
+        proximitySensor = AppRTCProximitySensor.create(context) { onProximitySensorChangedState() }
         Log.d(TAG, "defaultAudioDevice: $defaultAudioDevice")
         logDeviceInfo(TAG)
     }

@@ -20,7 +20,7 @@ import java.util.*
  * Asynchronous http requests implementation.
  */
 class AsyncHttpURLConnection(private val method: String, private val url: String, private val message: String?, private val events: AsyncHttpEvents) {
-    private var contentType: String? = null
+    var contentType: String? = null
 
     /**
      * Http requests callbacks.
@@ -30,10 +30,6 @@ class AsyncHttpURLConnection(private val method: String, private val url: String
         fun onHttpComplete(response: String?)
     }
 
-    fun setContentType(contentType: String?) {
-        this.contentType = contentType
-    }
-
     fun send() {
         Thread { sendHttpMessage() }.start()
     }
@@ -41,10 +37,7 @@ class AsyncHttpURLConnection(private val method: String, private val url: String
     private fun sendHttpMessage() {
         try {
             val connection = URL(url).openConnection() as HttpURLConnection
-            var postData = ByteArray(0)
-            if (message != null) {
-                postData = message.toByteArray(charset("UTF-8"))
-            }
+            val postData = message?.toByteArray(charset("UTF-8")) ?: ByteArray(0)
             connection.requestMethod = method
             connection.useCaches = false
             connection.doInput = true
@@ -58,14 +51,13 @@ class AsyncHttpURLConnection(private val method: String, private val url: String
                 connection.doOutput = true
                 connection.setFixedLengthStreamingMode(postData.size)
             }
-            if (contentType == null) {
-                connection.setRequestProperty("Content-Type", "text/plain; charset=utf-8")
-            } else {
-                connection.setRequestProperty("Content-Type", contentType)
+            when (contentType) {
+                null -> connection.setRequestProperty("Content-Type", "text/plain; charset=utf-8")
+                else -> connection.setRequestProperty("Content-Type", contentType)
             }
 
             // Send POST request.
-            if (doOutput && postData.size > 0) {
+            if (doOutput && postData.isNotEmpty()) {
                 val outStream = connection.outputStream
                 outStream.write(postData)
                 outStream.close()

@@ -64,11 +64,9 @@ class RecordedAudioToFileController(executor: ExecutorService) : SamplesReadyCal
 
     // Checks if external storage is available for read and write.
     private val isExternalStorageWritable: Boolean
-        private get() {
+        get() {
             val state = Environment.getExternalStorageState()
-            return if (Environment.MEDIA_MOUNTED == state) {
-                true
-            } else false
+            return Environment.MEDIA_MOUNTED == state
         }
 
     // Utilizes audio parameters to create a file name which contains sufficient

@@ -165,8 +165,7 @@ class WebSocketRTCClient(private val events: SignalingEvents) : AppRTCClient, We
             sendPostMessage(MessageType.MESSAGE, messageUrl, json.toString())
             if (connectionParameters!!.loopback) {
                 // In loopback mode rename this offer to answer and route it back.
-                val sdpAnswer = SessionDescription(
-                        SessionDescription.Type.fromCanonicalForm("answer"), sdp.description)
+                val sdpAnswer = SessionDescription(SessionDescription.Type.fromCanonicalForm("answer"), sdp.description)
                 events.onRemoteDescription(sdpAnswer)
             }
         })
@@ -251,42 +250,46 @@ class WebSocketRTCClient(private val events: SignalingEvents) : AppRTCClient, We
             var json = JSONObject(msg)
             val msgText = json.getString("msg")
             val errorText = json.optString("error")
-            if (msgText.length > 0) {
+            if (msgText.isNotEmpty()) {
                 json = JSONObject(msgText)
-                val type = json.optString("type")
-                if (type == "candidate") {
-                    events.onRemoteIceCandidate(toJavaCandidate(json))
-                } else if (type == "remove-candidates") {
-                    val candidateArray = json.getJSONArray("candidates")
+                when (val type = json.optString("type")) {
+                    "candidate" -> {
+                        events.onRemoteIceCandidate(toJavaCandidate(json))
+                    }
+                    "remove-candidates" -> {
+                        val candidateArray = json.getJSONArray("candidates")
 //                    val candidates = arrayOfNulls<IceCandidate>(candidateArray.length())
-                    val candidates = arrayOf<IceCandidate>()
-                    for (i in 0 until candidateArray.length()) {
-                        candidates[i] = toJavaCandidate(candidateArray.getJSONObject(i))
+                        val candidates = arrayOf<IceCandidate>()
+                        for (i in 0 until candidateArray.length()) {
+                            candidates[i] = toJavaCandidate(candidateArray.getJSONObject(i))
+                        }
+                        events.onRemoteIceCandidatesRemoved(candidates)
                     }
-                    events.onRemoteIceCandidatesRemoved(candidates)
-                } else if (type == "answer") {
-                    if (initiator) {
-                        val sdp = SessionDescription(
-                                SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"))
-                        events.onRemoteDescription(sdp)
-                    } else {
-                        reportError("Received answer for call initiator: $msg")
+                    "answer" -> {
+                        if (initiator) {
+                            val sdp = SessionDescription(SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"))
+                            events.onRemoteDescription(sdp)
+                        } else {
+                            reportError("Received answer for call initiator: $msg")
+                        }
                     }
-                } else if (type == "offer") {
-                    if (!initiator) {
-                        val sdp = SessionDescription(
-                                SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"))
-                        events.onRemoteDescription(sdp)
-                    } else {
-                        reportError("Received offer for call receiver: $msg")
+                    "offer" -> {
+                        if (!initiator) {
+                            val sdp = SessionDescription(SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"))
+                            events.onRemoteDescription(sdp)
+                        } else {
+                            reportError("Received offer for call receiver: $msg")
+                        }
                     }
-                } else if (type == "bye") {
-                    events.onChannelClose()
-                } else {
-                    reportError("Unexpected WebSocket message: $msg")
+                    "bye" -> {
+                        events.onChannelClose()
+                    }
+                    else -> {
+                        reportError("Unexpected WebSocket message: $msg")
+                    }
                 }
             } else {
-                if (errorText != null && errorText.length > 0) {
+                if (errorText.isNotEmpty()) {
                     reportError("WebSocket error message: $errorText")
                 } else {
                     reportError("Unexpected WebSocket message: $msg")
@@ -318,8 +321,7 @@ class WebSocketRTCClient(private val events: SignalingEvents) : AppRTCClient, We
     }
 
     // Send SDP or ICE candidate to a room server.
-    private fun sendPostMessage(
-            messageType: MessageType, url: String?, message: String?) {
+    private fun sendPostMessage(messageType: MessageType, url: String?, message: String?) {
         var logInfo = url
         if (message != null) {
             logInfo += ". Message: $message"
@@ -359,8 +361,7 @@ class WebSocketRTCClient(private val events: SignalingEvents) : AppRTCClient, We
     // Converts a JSON candidate to a Java object.
     @Throws(JSONException::class)
     fun toJavaCandidate(json: JSONObject): IceCandidate {
-        return IceCandidate(
-                json.getString("id"), json.getInt("label"), json.getString("candidate"))
+        return IceCandidate(json.getString("id"), json.getInt("label"), json.getString("candidate"))
     }
 
     companion object {

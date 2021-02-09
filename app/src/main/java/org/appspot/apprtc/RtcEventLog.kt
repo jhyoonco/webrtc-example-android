@@ -28,11 +28,9 @@ class RtcEventLog(peerConnection: PeerConnection?) {
             Log.e(TAG, "RtcEventLog has already started.")
             return
         }
-        val fileDescriptor: ParcelFileDescriptor
-        fileDescriptor = try {
+        val fileDescriptor: ParcelFileDescriptor = try {
             ParcelFileDescriptor.open(outputFile,
-                    ParcelFileDescriptor.MODE_READ_WRITE or ParcelFileDescriptor.MODE_CREATE
-                            or ParcelFileDescriptor.MODE_TRUNCATE)
+                    ParcelFileDescriptor.MODE_READ_WRITE or ParcelFileDescriptor.MODE_CREATE or ParcelFileDescriptor.MODE_TRUNCATE)
         } catch (e: IOException) {
             Log.e(TAG, "Failed to create a new file", e)
             return

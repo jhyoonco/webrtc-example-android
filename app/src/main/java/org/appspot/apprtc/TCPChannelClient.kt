@@ -28,9 +28,8 @@ import java.util.concurrent.ExecutorService
  * passed in a constructor, otherwise exception will be thrown.
  * All events are dispatched on the same thread.
  */
-class TCPChannelClient(
-        private val executor: ExecutorService, eventListener: TCPChannelEvents, ip: String?, port: Int) {
-    private val executorThreadCheck: ThreadChecker
+class TCPChannelClient(private val executor: ExecutorService, eventListener: TCPChannelEvents, ip: String?, port: Int) {
+    private val executorThreadCheck: ThreadChecker = ThreadChecker()
     private val eventListener: TCPChannelEvents
     private var socket: TCPSocket? = null
 
@@ -50,7 +49,7 @@ class TCPChannelClient(
      */
     fun disconnect() {
         executorThreadCheck.checkIsOnValidThread()
-        socket!!.disconnect()
+        socket?.disconnect()
     }
 
     /**
@@ -60,7 +59,7 @@ class TCPChannelClient(
      */
     fun send(message: String) {
         executorThreadCheck.checkIsOnValidThread()
-        socket!!.send(message)
+        socket?.send(message)
     }
 
     /**
@@ -77,7 +76,7 @@ class TCPChannelClient(
      */
     private abstract inner class TCPSocket internal constructor() : Thread() {
         // Lock for editing out and rawSocket
-        protected val rawSocketLock: Any
+        protected val rawSocketLock: Any = Any()
         private var out: PrintWriter? = null
         private var rawSocket: Socket? = null
 
@@ -127,8 +126,7 @@ class TCPChannelClient(
                 eventListener.onTCPConnected(isServer)
             }
             while (true) {
-                val message: String?
-                message = try {
+                val message: String? = try {
                     `in`.readLine()
                 } catch (e: IOException) {
                     synchronized(rawSocketLock) {
@@ -190,9 +188,6 @@ class TCPChannelClient(
             }
         }
 
-        init {
-            rawSocketLock = Any()
-        }
     }
 
     private inner class TCPSocketServer(private val address: InetAddress, private val port: Int) : TCPSocket() {
@@ -202,8 +197,7 @@ class TCPChannelClient(
         /** Opens a listening socket and waits for a connection.  */
         override fun connect(): Socket? {
             Log.d(TAG, "Listening on [" + address.hostAddress + "]:" + Integer.toString(port))
-            val tempSocket: ServerSocket
-            tempSocket = try {
+            val tempSocket: ServerSocket = try {
                 ServerSocket(port, 0, address)
             } catch (e: IOException) {
                 reportError("Failed to create server socket: " + e.message)
@@ -271,7 +265,6 @@ class TCPChannelClient(
      * @param port          Port to listen on or connect to.
      */
     init {
-        executorThreadCheck = ThreadChecker()
         executorThreadCheck.detachThread()
         this.eventListener = eventListener
         val address: InetAddress

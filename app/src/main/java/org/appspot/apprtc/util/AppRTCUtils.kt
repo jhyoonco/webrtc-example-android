@@ -27,8 +27,7 @@ object AppRTCUtils {
     /** Helper method for building a string of thread information. */
     @JvmStatic
     val threadInfo: String
-        get() = ("@[name=" + Thread.currentThread().name + ", id=" + Thread.currentThread().id
-                + "]")
+        get() = ("@[name=" + Thread.currentThread().name + ", id=" + Thread.currentThread().id + "]")
 
     /** Information about the current build, taken from system properties.  */
     @JvmStatic

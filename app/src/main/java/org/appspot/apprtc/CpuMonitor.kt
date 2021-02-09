@@ -136,9 +136,9 @@ class CpuMonitor(context: Context) {
     }
 
     fun pause() {
-        if (executor != null) {
+        executor?.let {
             Log.d(TAG, "pause")
-            executor!!.shutdownNow()
+            it.shutdownNow()
             executor = null
         }
     }
@@ -152,7 +152,7 @@ class CpuMonitor(context: Context) {
     // TODO(bugs.webrtc.org/8491): Remove NoSynchronizedMethodCheck suppression.
     @Synchronized
     fun reset() {
-        if (executor != null) {
+        executor?.let {
             Log.d(TAG, "reset")
             resetStat()
             cpuOveruse = false
@@ -175,13 +175,10 @@ class CpuMonitor(context: Context) {
         get() = doubleToPercent(frequencyScale.average)
 
     private fun scheduleCpuUtilizationTask() {
-        if (executor != null) {
-            executor!!.shutdownNow()
-            executor = null
-        }
+        executor?.shutdownNow()
         executor = Executors.newSingleThreadScheduledExecutor()
         val possiblyIgnoredError:  // Prevent downstream linter warnings.
-                Future<*> = executor!!.scheduleAtFixedRate(Runnable { cpuUtilizationTask() }, 0, CPU_STAT_SAMPLE_PERIOD_MS.toLong(), TimeUnit.MILLISECONDS)
+                Future<*> = executor!!.scheduleAtFixedRate({ cpuUtilizationTask() }, 0, CPU_STAT_SAMPLE_PERIOD_MS.toLong(), TimeUnit.MILLISECONDS)
     }
 
     private fun cpuUtilizationTask() {
@@ -274,10 +271,10 @@ class CpuMonitor(context: Context) {
         actualCpusPresent = 0
         for (i in 0 until cpusPresent) {
             /*
-       * For each CPU, attempt to first read its max frequency, then its
-       * current frequency.  Once as the max frequency for a CPU is found,
-       * save it in cpuFreqMax[].
-       */
+               * For each CPU, attempt to first read its max frequency, then its
+               * current frequency.  Once as the max frequency for a CPU is found,
+               * save it in cpuFreqMax[].
+               */
             curFreqScales[i] = 0.0
             if (cpuFreqMax[i] == 0L) {
                 // We have never found this CPU's max frequency.  Attempt to read it.
@@ -302,11 +299,12 @@ class CpuMonitor(context: Context) {
             cpuFreqCurSum += cpuFreqCur
 
             /* Here, lastSeenMaxFreq might come from
-       * 1. cpuFreq[i], or
-       * 2. a previous iteration, or
-       * 3. a newly read value, or
-       * 4. hypothetically from the pre-loop dummy.
-       */cpuFreqMaxSum += lastSeenMaxFreq
+               * 1. cpuFreq[i], or
+               * 2. a previous iteration, or
+               * 3. a newly read value, or
+               * 4. hypothetically from the pre-loop dummy.
+               */
+            cpuFreqMaxSum += lastSeenMaxFreq
             if (lastSeenMaxFreq > 0) {
                 curFreqScales[i] = cpuFreqCur.toDouble() / lastSeenMaxFreq
             }

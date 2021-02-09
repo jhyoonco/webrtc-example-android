@@ -91,10 +91,8 @@ class DirectRTCClient(private val events: SignalingEvents) : AppRTCClient, TCPCh
      */
     private fun disconnectFromRoomInternal() {
         roomState = ConnectionState.CLOSED
-        if (tcpClient != null) {
-            tcpClient!!.disconnect()
-            tcpClient = null
-        }
+        tcpClient?.disconnect()
+        tcpClient = null
         executor.shutdown()
     }
 
@@ -176,37 +174,42 @@ class DirectRTCClient(private val events: SignalingEvents) : AppRTCClient, TCPCh
     override fun onTCPMessage(msg: String?) {
         try {
             val json = JSONObject(msg)
-            val type = json.optString("type")
-            if (type == "candidate") {
-                events.onRemoteIceCandidate(toJavaCandidate(json))
-            } else if (type == "remove-candidates") {
-                val candidateArray = json.getJSONArray("candidates")
-//                val candidates = arrayOfNulls<IceCandidate>(candidateArray.length())
-                val candidates = arrayOf<IceCandidate>()
-                for (i in 0 until candidateArray.length()) {
-                    candidates[i] = toJavaCandidate(candidateArray.getJSONObject(i))
+            when (val type = json.optString("type")) {
+                "candidate" -> {
+                    events.onRemoteIceCandidate(toJavaCandidate(json))
                 }
-                events.onRemoteIceCandidatesRemoved(candidates)
-            } else if (type == "answer") {
-                val sdp = SessionDescription(
-                        SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"))
-                events.onRemoteDescription(sdp)
-            } else if (type == "offer") {
-                val sdp = SessionDescription(
-                        SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"))
-                val parameters = SignalingParameters( // Ice servers are not needed for direct connections.
-                        ArrayList(),
-                        false,  // This code will only be run on the client side. So, we are not the initiator.
-                        null,  // clientId
-                        null,  // wssUrl
-                        null,  // wssPostUrl
-                        sdp,  // offerSdp
-                        null // iceCandidates
-                )
-                roomState = ConnectionState.CONNECTED
-                events.onConnectedToRoom(parameters)
-            } else {
-                reportError("Unexpected TCP message: $msg")
+                "remove-candidates" -> {
+                    val candidateArray = json.getJSONArray("candidates")
+//                val candidates = arrayOfNulls<IceCandidate>(candidateArray.length())
+                    val candidates = arrayOf<IceCandidate>()
+                    for (i in 0 until candidateArray.length()) {
+                        candidates[i] = toJavaCandidate(candidateArray.getJSONObject(i))
+                    }
+                    events.onRemoteIceCandidatesRemoved(candidates)
+                }
+                "answer" -> {
+                    val sdp = SessionDescription(
+                            SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"))
+                    events.onRemoteDescription(sdp)
+                }
+                "offer" -> {
+                    val sdp = SessionDescription(
+                            SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"))
+                    val parameters = SignalingParameters( // Ice servers are not needed for direct connections.
+                            ArrayList(),
+                            false,  // This code will only be run on the client side. So, we are not the initiator.
+                            null,  // clientId
+                            null,  // wssUrl
+                            null,  // wssPostUrl
+                            sdp,  // offerSdp
+                            null // iceCandidates
+                    )
+                    roomState = ConnectionState.CONNECTED
+                    events.onConnectedToRoom(parameters)
+                }
+                else -> {
+                    reportError("Unexpected TCP message: $msg")
+                }
             }
         } catch (e: JSONException) {
             reportError("TCP message JSON parsing error: $e")

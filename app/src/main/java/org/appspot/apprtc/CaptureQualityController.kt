@@ -15,6 +15,8 @@ import android.widget.TextView
 import org.appspot.apprtc.CallFragment.OnCallEvents
 import org.webrtc.CameraEnumerationAndroid.CaptureFormat
 import java.util.*
+import kotlin.math.exp
+import kotlin.math.roundToInt
 
 /**
  * Control capture format based on a seekbar listener.
@@ -46,7 +48,7 @@ class CaptureQualityController(
             width = 0
             height = 0
             framerate = 0
-            captureFormatText!!.setText(R.string.muted)
+            captureFormatText?.setText(R.string.muted)
             return
         }
 
@@ -60,7 +62,7 @@ class CaptureQualityController(
         var bandwidthFraction = progress.toDouble() / 100.0
         // Make a log-scale transformation, still between 0 and 1.
         val kExpConstant = 3.0
-        bandwidthFraction = (Math.exp(kExpConstant * bandwidthFraction) - 1) / (Math.exp(kExpConstant) - 1)
+        bandwidthFraction = (exp(kExpConstant * bandwidthFraction) - 1) / (exp(kExpConstant) - 1)
         targetBandwidth = bandwidthFraction * maxCaptureBandwidth
 
         // Choose the best format given a target bandwidth.
@@ -68,8 +70,8 @@ class CaptureQualityController(
         width = bestFormat.width
         height = bestFormat.height
         framerate = calculateFramerate(targetBandwidth, bestFormat)
-        captureFormatText!!.text = String.format(captureFormatText.context.getString(R.string.format_description), width,
-                height, framerate)
+        captureFormatText?.let{ it.text = String.format(it.context.getString(R.string.format_description), width,
+                height, framerate) }
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -79,8 +81,8 @@ class CaptureQualityController(
 
     // Return the highest frame rate possible based on bandwidth and format.
     private fun calculateFramerate(bandwidth: Double, format: CaptureFormat): Int {
-        return Math.round(Math.min(format.framerate.max, Math.round(bandwidth / (format.width * format.height)).toInt())
-                / 1000.0).toInt()
+        return (format.framerate.max.coerceAtMost((bandwidth / (format.width * format.height)).roundToInt())
+                / 1000.0).roundToInt()
     }
 
     companion object {

@@ -52,7 +52,7 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
 
     private val apprtcContext: Context
     private val apprtcAudioManager: AppRTCAudioManager
-    private val audioManager: AudioManager?
+    private val audioManager: AudioManager
     private val handler: Handler
     var scoConnectionAttempts = 0
     private var bluetoothState: State
@@ -120,17 +120,22 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
                         + "s=" + stateToString(state) + ", "
                         + "sb=" + isInitialStickyBroadcast + ", "
                         + "BT state: " + bluetoothState)
-                if (state == BluetoothHeadset.STATE_CONNECTED) {
-                    scoConnectionAttempts = 0
-                    updateAudioDeviceState()
-                } else if (state == BluetoothHeadset.STATE_CONNECTING) {
-                    // No action needed.
-                } else if (state == BluetoothHeadset.STATE_DISCONNECTING) {
-                    // No action needed.
-                } else if (state == BluetoothHeadset.STATE_DISCONNECTED) {
-                    // Bluetooth is probably powered off during the call.
-                    stopScoAudio()
-                    updateAudioDeviceState()
+                when (state) {
+                    BluetoothHeadset.STATE_CONNECTED -> {
+                        scoConnectionAttempts = 0
+                        updateAudioDeviceState()
+                    }
+                    BluetoothHeadset.STATE_CONNECTING -> {
+                        // No action needed.
+                    }
+                    BluetoothHeadset.STATE_DISCONNECTING -> {
+                        // No action needed.
+                    }
+                    BluetoothHeadset.STATE_DISCONNECTED -> {
+                        // Bluetooth is probably powered off during the call.
+                        stopScoAudio()
+                        updateAudioDeviceState()
+                    }
                 }
                 // Change in the audio (SCO) connection state of the Headset profile.
                 // Typically received after call to startScoAudio() has finalized.
@@ -142,25 +147,29 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
                         + "s=" + stateToString(state) + ", "
                         + "sb=" + isInitialStickyBroadcast + ", "
                         + "BT state: " + bluetoothState)
-                if (state == BluetoothHeadset.STATE_AUDIO_CONNECTED) {
-                    cancelTimer()
-                    if (bluetoothState == State.SCO_CONNECTING) {
-                        Log.d(TAG, "+++ Bluetooth audio SCO is now connected")
-                        bluetoothState = State.SCO_CONNECTED
-                        scoConnectionAttempts = 0
+                when (state) {
+                    BluetoothHeadset.STATE_AUDIO_CONNECTED -> {
+                        cancelTimer()
+                        if (bluetoothState == State.SCO_CONNECTING) {
+                            Log.d(TAG, "+++ Bluetooth audio SCO is now connected")
+                            bluetoothState = State.SCO_CONNECTED
+                            scoConnectionAttempts = 0
+                            updateAudioDeviceState()
+                        } else {
+                            Log.w(TAG, "Unexpected state BluetoothHeadset.STATE_AUDIO_CONNECTED")
+                        }
+                    }
+                    BluetoothHeadset.STATE_AUDIO_CONNECTING -> {
+                        Log.d(TAG, "+++ Bluetooth audio SCO is now connecting...")
+                    }
+                    BluetoothHeadset.STATE_AUDIO_DISCONNECTED -> {
+                        Log.d(TAG, "+++ Bluetooth audio SCO is now disconnected")
+                        if (isInitialStickyBroadcast) {
+                            Log.d(TAG, "Ignore STATE_AUDIO_DISCONNECTED initial sticky broadcast.")
+                            return
+                        }
                         updateAudioDeviceState()
-                    } else {
-                        Log.w(TAG, "Unexpected state BluetoothHeadset.STATE_AUDIO_CONNECTED")
                     }
-                } else if (state == BluetoothHeadset.STATE_AUDIO_CONNECTING) {
-                    Log.d(TAG, "+++ Bluetooth audio SCO is now connecting...")
-                } else if (state == BluetoothHeadset.STATE_AUDIO_DISCONNECTED) {
-                    Log.d(TAG, "+++ Bluetooth audio SCO is now disconnected")
-                    if (isInitialStickyBroadcast) {
-                        Log.d(TAG, "Ignore STATE_AUDIO_DISCONNECTED initial sticky broadcast.")
-                        return
-                    }
-                    updateAudioDeviceState()
                 }
             }
             Log.d(TAG, "onReceive done: BT state=$bluetoothState")
@@ -208,7 +217,7 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
             return
         }
         // Ensure that the device supports use of BT SCO audio for off call use cases.
-        if (!audioManager!!.isBluetoothScoAvailableOffCall) {
+        if (!audioManager.isBluetoothScoAvailableOffCall) {
             Log.e(TAG, "Bluetooth SCO audio is not available off call")
             return
         }
@@ -250,7 +259,7 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
         unregisterReceiver(bluetoothHeadsetReceiver)
         cancelTimer()
         if (bluetoothHeadset != null) {
-            bluetoothAdapter!!.closeProfileProxy(BluetoothProfile.HEADSET, bluetoothHeadset)
+            bluetoothAdapter?.closeProfileProxy(BluetoothProfile.HEADSET, bluetoothHeadset)
             bluetoothHeadset = null
         }
         bluetoothAdapter = null
@@ -291,7 +300,7 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
         // connection to be available when the method returns but instead register to receive the
         // intent ACTION_SCO_AUDIO_STATE_UPDATED and wait for the state to be SCO_AUDIO_STATE_CONNECTED.
         bluetoothState = State.SCO_CONNECTING
-        audioManager!!.startBluetoothSco()
+        audioManager.startBluetoothSco()
         audioManager.isBluetoothScoOn = true
         scoConnectionAttempts++
         startTimer()
@@ -309,7 +318,7 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
             return
         }
         cancelTimer()
-        audioManager!!.stopBluetoothSco()
+        audioManager.stopBluetoothSco()
         audioManager.isBluetoothScoOn = false
         bluetoothState = State.SCO_DISCONNECTING
         Log.d(TAG, "stopScoAudio done: BT state=" + bluetoothState + ", "
@@ -351,7 +360,7 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
     /**
      * Stubs for test mocks.
      */
-    protected fun getAudioManager(context: Context): AudioManager? {
+    protected fun getAudioManager(context: Context): AudioManager {
         return context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
@@ -368,8 +377,8 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
         return bluetoothAdapter!!.getProfileProxy(context, listener, profile)
     }
 
-    protected fun hasPermission(context: Context?, permission: String?): Boolean {
-        return (apprtcContext.checkPermission(permission!!, Process.myPid(), Process.myUid())
+    protected fun hasPermission(context: Context?, permission: String): Boolean {
+        return (apprtcContext.checkPermission(permission, Process.myPid(), Process.myUid())
                 == PackageManager.PERMISSION_GRANTED)
     }
 
@@ -383,7 +392,7 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
                 + "address=" + localAdapter.address)
         // Log the set of BluetoothDevice objects that are bonded (paired) to the local adapter.
         val pairedDevices = localAdapter.bondedDevices
-        if (!pairedDevices.isEmpty()) {
+        if (pairedDevices.isNotEmpty()) {
             Log.d(TAG, "paired devices:")
             for (device in pairedDevices) {
                 Log.d(TAG, " name=" + device.name + ", address=" + device.address)
@@ -454,7 +463,7 @@ class AppRTCBluetoothManager protected constructor(context: Context, audioManage
 
     /** Checks whether audio uses Bluetooth SCO.  */
     private val isScoOn: Boolean
-        private get() = audioManager!!.isBluetoothScoOn
+        private get() = audioManager.isBluetoothScoOn
 
     /** Converts BluetoothAdapter states into local string representations.  */
     private fun stateToString(state: Int): String {

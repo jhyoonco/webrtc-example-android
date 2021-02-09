@@ -88,17 +88,18 @@ class RoomParametersFetcher(
                 for (i in 0 until messages.length()) {
                     val messageString = messages.getString(i)
                     val message = JSONObject(messageString)
-                    val messageType = message.getString("type")
                     Log.d(TAG, "GAE->C #$i : $messageString")
-                    if (messageType == "offer") {
-                        offerSdp = SessionDescription(
-                                SessionDescription.Type.fromCanonicalForm(messageType), message.getString("sdp"))
-                    } else if (messageType == "candidate") {
-                        val candidate = IceCandidate(
-                                message.getString("id"), message.getInt("label"), message.getString("candidate"))
-                        iceCandidates.add(candidate)
-                    } else {
-                        Log.e(TAG, "Unknown message: $messageString")
+                    when (val messageType = message.getString("type")) {
+                        "offer" -> {
+                            offerSdp = SessionDescription(SessionDescription.Type.fromCanonicalForm(messageType), message.getString("sdp"))
+                        }
+                        "candidate" -> {
+                            val candidate = IceCandidate(message.getString("id"), message.getInt("label"), message.getString("candidate"))
+                            iceCandidates.add(candidate)
+                        }
+                        else -> {
+                            Log.e(TAG, "Unknown message: $messageString")
+                        }
                     }
                 }
             }
@@ -125,8 +126,7 @@ class RoomParametersFetcher(
                     iceServers.add(turnServer)
                 }
             }
-            val params = SignalingParameters(
-                    iceServers, initiator, clientId, wssUrl, wssPostUrl, offerSdp, iceCandidates)
+            val params = SignalingParameters(iceServers, initiator, clientId, wssUrl, wssPostUrl, offerSdp, iceCandidates)
             events.onSignalingParametersReady(params)
         } catch (e: JSONException) {
             events.onSignalingParametersError("Room JSON parsing error: $e")
@@ -148,8 +148,7 @@ class RoomParametersFetcher(
         connection.readTimeout = TURN_HTTP_TIMEOUT_MS
         val responseCode = connection.responseCode
         if (responseCode != 200) {
-            throw IOException("Non-200 response when requesting TURN server from " + url + " : "
-                    + connection.getHeaderField(null))
+            throw IOException("Non-200 response when requesting TURN server from " + url + " : " + connection.getHeaderField(null))
         }
         val responseStream = connection.inputStream
         val response = drainStream(responseStream)
